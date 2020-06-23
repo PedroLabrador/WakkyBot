@@ -10,7 +10,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from helpers import Server
-from helpers import Request
 from telegram import ReplyKeyboardMarkup
 from telegram import ReplyKeyboardRemove
 from telegram.ext import ConversationHandler
