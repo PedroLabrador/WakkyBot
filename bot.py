@@ -1,6 +1,10 @@
+#!/usr/bin/python3.8
+
+import atexit
 import os
 import logging
 import subprocess
+import sys
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -15,8 +19,39 @@ from telegram.ext import Filters
 from telegram.ext import MessageHandler
 from telegram.ext import Updater
 
-
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', level=logging.INFO)
+
+# -------- file descriptor ----------
+#
+# Locks the script while running
+# atexit will delete the file on exit or crash 
+# if the process gets killed, file will also be removed
+#
+# -----------------------------------
+
+def clean_pid(pidfile):
+    os.unlink(pidfile)
+
+pid = str(os.getpid())
+pidfile = "/tmp/wakky.lock"
+
+if os.path.isfile(pidfile):
+    with open(pidfile, 'r') as f:
+        try:
+            os.kill(int(f.readline()), 0)
+        except OSError:
+            logging.info(f"Process was killed, deleting {pidfile}")
+            clean_pid(pidfile)
+        else:
+            logging.info(f"{pidfile} already exists, exiting")
+            sys.exit()
+
+with open(pidfile, 'w') as f:
+    f.write(pid)
+
+atexit.register(clean_pid, pidfile)
+
+# wakky bot
 
 updater = Updater(token=os.getenv("WAKKY_TELEGRAM_API_KEY"), use_context=True)
 
@@ -142,3 +177,4 @@ updater.dispatcher.add_handler(ConversationHandler(
 
 updater.start_polling()
 updater.idle()
+    
