@@ -54,6 +54,7 @@ atexit.register(clean_pid, pidfile)
 # wakky bot
 
 updater = Updater(token=os.getenv("WAKKY_TELEGRAM_API_KEY"), use_context=True)
+allowed_used_ids = set([int(allowed_id) for allowed_id in os.getenv('ALLOWED_USER_IDS').split(',') if allowed_id != ''])
 
 def start(update, context):
     context.bot.send_message(chat_id=update.effective_chat.id, text="Bruh")
@@ -160,7 +161,7 @@ def cancel(update, context):
 updater.dispatcher.add_handler(CommandHandler('start', start))
 
 updater.dispatcher.add_handler(ConversationHandler(
-    entry_points=[CommandHandler('bots', get_list_of_bots)],
+    entry_points=[CommandHandler('bots', get_list_of_bots, Filters.user(allowed_used_ids))],
 
     states={
         Server.SELECT_TASK: [
