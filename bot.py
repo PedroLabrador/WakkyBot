@@ -109,13 +109,13 @@ def restart_bot(update, context):
     logging.info(f"Selected option: { message.text }")
 
     if is_task_restarted:
-        message.reply_text(f"[{bot_id}] {bot_name} restarted.")
+        message.reply_text(f"[{bot_id}] {bot_name} restarted.", reply_markup=ReplyKeyboardRemove())
 
         del user_data['bots']
         del user_data['selected_bot_id']
         del user_data['selected_bot_name']
     else:
-        message.reply_text(f"Something went wrong when trying to restart {bot_name}.")
+        message.reply_text(f"Something went wrong when trying to restart {bot_name}.", reply_markup=ReplyKeyboardRemove())
 
     return ConversationHandler.END
 
@@ -132,9 +132,9 @@ def upload_bot(update, context):
         process = subprocess.run(["git", "pull"], cwd=botwd, stdout=-1)
         output = process.stdout.decode('utf-8').replace("\n", '')
         logging.info(output)
-        message.reply_text(output)
+        message.reply_text(output, reply_markup=ReplyKeyboardRemove())
     else:
-        message.reply_text("There's not a repository set for this bot")
+        message.reply_text("There's not a repository set for this bot", reply_markup=ReplyKeyboardRemove())
 
     del user_data['bots']
     del user_data['selected_bot_id']
@@ -148,6 +148,8 @@ def cancel(update, context):
 
     logging.info(f"Selected option: { message.text }")
 
+    message.reply_text("OK", reply_markup=ReplyKeyboardRemove())
+
     if 'bots' in user_data:
         del user_data['bots']
     if 'selected_bot_id' in user_data:
@@ -155,6 +157,10 @@ def cancel(update, context):
     if 'selected_bot_name' in user_data:
         del user_data['selected_bot_name']
 
+    return ConversationHandler.END
+
+def not_allowed(update, context):
+    update.message.reply_text("User not allowed", reply_markup=ReplyKeyboardRemove())
     return ConversationHandler.END
 
 updater.dispatcher.add_handler(CommandHandler('start', start))
@@ -174,6 +180,8 @@ updater.dispatcher.add_handler(ConversationHandler(
 
     fallbacks=[MessageHandler(Filters.regex('^Cancel$'), cancel)]
 ))
+
+updater.dispatcher.add_handler(MessageHandler(Filters.text, not_allowed))
 
 updater.start_polling()
 updater.idle()
